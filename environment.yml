@@ -1,0 +1,8 @@
+name: webgpu
+channels:
+  - conda-forge
+dependencies:
+  - cmake
+  - python
+variables:
+  EMSCRIPTEN_VERSION: 4.0.11

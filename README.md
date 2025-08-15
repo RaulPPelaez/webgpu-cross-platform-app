@@ -21,12 +21,25 @@ git submodule update --init
 
 ## Requirements
 
-<i>Instructions are for macOS; they will need to be adapted to work on Linux and Windows.</i>
+Unfortunately, emscripten is a pain to install via anything other than emsdk, which is a nightmare to isolate.
 
-```sh
-# Make sure CMake and Emscripten are installed.
-brew install cmake emscripten
+Dependencies are installed with conda, but emscripten needs to be installed separatedly:
+
+```bash
+conda env create -n wgpu 
+conda activate wgpu
 ```
+Then, while the enviornment is activated, install emscripten with:
+```bash
+git clone https://github.com/emscripten-core/emsdk.git
+cd emsdk
+./emsdk install $EMSCRIPTEN_VERSION
+./emsdk activate $EMSCRIPTEN_VERSION
+mkdir -p $CONDA_PREFIX/etc/conda/activate.d
+echo "#!/bin/sh" > $CONDA_PREFIX/etc/conda/activate.d/emscripten.sh
+echo "source $PWD/emsdk_env.sh" >> $CONDA_PREFIX/etc/conda/activate.d/emscripten.sh
+```
+The script `bootstrap.sh` will perform these steps automatically.
 
 ## Specific platform build
 
