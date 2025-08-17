@@ -253,3 +253,64 @@ void inspectDevice(WGPUDevice device) {
 		std::cout << " - maxStorageTexturesInFragmentStage: " << limits.maxStorageTexturesInFragmentStage << std::endl;
 	}
 }
+void fetchBufferDataSync(
+	WGPUInstance instance,
+	WGPUBuffer bufferB,
+	std::function<void(const void*)> processBufferData
+) {
+	// We copy here what used to be in main():
+	// Context passed to `onBufferBMapped` through theuserdata pointer:
+	struct OnBufferBMappedContext {
+		bool operationEnded = false; // Turned true as soon as the callback is invoked
+		bool mappingIsSuccessful = false; // Turned true only if mapping succeeded
+	};
+	
+	// This function has the type WGPUBufferMapCallback as defined in webgpu.h
+	auto onBufferBMapped = [](
+		WGPUMapAsyncStatus status,
+		struct WGPUStringView message,
+		void* userdata1,
+		void* /* userdata2 */
+	) {
+		OnBufferBMappedContext& context = *reinterpret_cast<OnBufferBMappedContext*>(userdata1);
+		context.operationEnded = true;
+		if (status == WGPUMapAsyncStatus_Success) {
+			context.mappingIsSuccessful = true;
+		} else {
+			std::cout << "Could not map buffer B! Status: " << status << ", message: " << toStdStringView(message) << std::endl;
+		}
+	};
+	
+	// We create an instance of the context shared with `onBufferBMapped`
+	OnBufferBMappedContext context;
+	
+	// And we build the callback info:
+	WGPUBufferMapCallbackInfo callbackInfo = WGPU_BUFFER_MAP_CALLBACK_INFO_INIT;
+	callbackInfo.mode = WGPUCallbackMode_AllowProcessEvents;
+	callbackInfo.callback = onBufferBMapped;
+	callbackInfo.userdata1 = &context;
+	
+	// And finally we launch the asynchronous operation
+	wgpuBufferMapAsync(
+		bufferB,
+		WGPUMapMode_Read,
+		0, // offset
+		WGPU_WHOLE_MAP_SIZE,
+		callbackInfo
+	);
+	
+	// Process events until the map operation ended
+	wgpuInstanceProcessEvents(instance);
+	while (!context.operationEnded) {
+		sleepForMilliseconds(200);
+		wgpuInstanceProcessEvents(instance);
+	}
+	
+	if (context.mappingIsSuccessful) {
+		const void* bufferData = wgpuBufferGetConstMappedRange(bufferB, 0, WGPU_WHOLE_MAP_SIZE);
+		processBufferData(bufferData);
+	}
+}
+uint32_t divideAndCeil(uint32_t p, uint32_t q) {
+	return (p + q - 1) / q;
+}

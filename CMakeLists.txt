@@ -4,13 +4,14 @@ project(
 	VERSION 0.1.0
 	LANGUAGES CXX C
 )
-
+set(FETCHCONTENT_QUIET FALSE)
 include(FetchContent)
 FetchContent_Declare(
 	webgpu
 	GIT_REPOSITORY https://github.com/eliemichel/WebGPU-distribution.git
 	GIT_TAG        main
 	GIT_SHALLOW    TRUE
+	GIT_PROGRESS    TRUE
 )
 FetchContent_MakeAvailable(webgpu)
 

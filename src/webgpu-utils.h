@@ -52,3 +52,19 @@ void inspectAdapter(WGPUAdapter adapter);
  * Display information about a device
  */
 void inspectDevice(WGPUDevice device);
+#include <functional>
+
+/**
+ * Fetch data from a GPU buffer back to the CPU.
+ * This function blocks until the data is available on CPU, then calls the
+ * `processBufferData` callback, and finally unmap the buffer.
+ */
+void fetchBufferDataSync(
+	WGPUInstance instance,
+	WGPUBuffer buffer,
+	std::function<void(const void*)> processBufferData
+);
+/**
+ * Divides p / q and ceil up to the next integer value
+ */
+uint32_t divideAndCeil(uint32_t p, uint32_t q);
